@@ -531,8 +531,12 @@ class MiniMaxH3VideoVAE(nn.Module):
 
         z_list = []
         for i in range(num_chunks):
-            clip_x = x[:, :, i * self.clip_length:(i + 1) * self.clip_length, :, :]
-            z_list.append(self._adaptive_encode(clip_x))
+            start = i * self.clip_length
+            end = start + self.clip_length
+            ctx_start = max(0, start - self.clip_length)
+            clip_x = x[:, :, ctx_start:end, :, :]
+            z = self._adaptive_encode(clip_x)
+            z_list.append(z[:, :, -self.tokens_chunk_size:])
 
         z = torch.cat(z_list, dim=2)
         if self.token_drop > 0:
